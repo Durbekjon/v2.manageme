@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(uuid())
+  name      String?
+  surname   String?
+  username  String     @unique
+  password  String
+  phone     String?
+  age       Int?
+  email     Email?
+  avatar    File?      @relation(fields: [fileId], references: [id])
+  fileId    String?    @unique
+  createdAt DateTime   @default(now()) @map("created_at")
+  Roles     Role[]
+  School    School[]
+  Employer  Employee[]
+  Student   Student[]
+
+  @@map("user")
+}
+
+model Email {
+  id       String  @id @default(uuid())
+  email    String
+  verified Boolean
+  user     User    @relation(fields: [userId], references: [id])
+  userId   String  @unique
+
+  @@map("user_emails")
+}
+
+model Role {
+  id          String    @id @default(uuid())
+  school      School    @relation(fields: [schoolId], references: [id])
+  schoolId    String
+  role        RoleType
+  permissions String[]
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String
+  employee    Employee? @relation(fields: [employeeId], references: [id])
+  employeeId  String?
+
+  @@map("role")
+}
+
+enum RoleType {
+  USER
+  MANAGER
+  ADMINISTRATOR
+  STUDENT
+  TEACHER
+  CEO
+}
+
+model School {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  slogan      String?
+  director    User       @relation(fields: [directorId], references: [id])
+  directorId  String
+  roles       Role[]
+  positions   Position[]
+  employees   Employee[]
+  Course      Course[]
+  Group       Group[]
+  Student     Student[]
+
+  @@map("school")
+}
+
+model File {
+  id String @id @default(uuid())
+
+  key      String @unique
+  location String
+  size     Int
+
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User[]
+
+  @@map("file")
+}
+
+model Month {
+  id    String   @id @default(uuid())
+  date  DateTime
+  month Int
+  year  Int
+  isEnd Boolean  @default(false)
+
+  @@map("month")
+}
+
+model Employee {
+  id        String         @id @default(uuid())
+  user      User           @relation(fields: [userId], references: [id])
+  userId    String
+  school    School         @relation(fields: [schoolId], references: [id])
+  schoolId  String
+  positions Position[]
+  status    EmployeeStatus
+  message   String?
+  Role      Role[]
+  Course    Course?        @relation(fields: [courseId], references: [id])
+  courseId  Int?
+
+  @@map("employee")
+}
+
+enum EmployeeStatus {
+  NEW
+  CANCELLED
+  ACCEPTED
+  VACATION
+}
+
+model Position {
+  id          Int          @id @default(autoincrement())
+  name        String
+  type        PositionType
+  description String?
+  permissions String[]
+  school      School?      @relation(fields: [schoolId], references: [id])
+  schoolId    String?
+  Employee    Employee?    @relation(fields: [employerId], references: [id])
+  employerId  String?
+
+  @@map("position")
+}
+
+enum PositionType {
+  MANAGER
+  ADMINISTRATOR
+  TEACHER
+  CEO
+  ACCOUNTANT
+  CLEANER
+  SECURITY
+}
+
+model Course {
+  id         Int            @id @default(autoincrement())
+  name       String
+  category   CourseCategory @relation(fields: [categoryId], references: [id])
+  categoryId String
+  school     School         @relation(fields: [schoolId], references: [id])
+  schoolId   String
+  type       CourseType[]
+  price      Float?
+  teachers   Employee[]
+  duration   Int
+
+  @@map("course")
+}
+
+enum CourseType {
+  ONLINE
+  OFFLINE
+  VIDEO
+}
+
+model CourseCategory {
+  id      String   @id @default(uuid())
+  name    String
+  courses Course[]
+
+  @@map("course_category")
+}
+
+model Group {
+  id       String    @id @default(uuid())
+  name     String
+  school   School    @relation(fields: [schoolId], references: [id])
+  schoolId String
+  // students  Student[]
+  // attendances Attendance[]
+  // groupPayments GroupPayment[]
+  Student  Student[]
+
+  @@map("group")
+}
+
+model Student {
+  id       Int    @id @default(autoincrement())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  groupId  String
+  group    Group  @relation(fields: [groupId], references: [id])
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id])
+  // payments  StudentPayment[]
+
+  @@map("student")
+}
