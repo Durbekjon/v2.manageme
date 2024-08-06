@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
   S3Client,
+  ObjectCannedACL,
 } from '@aws-sdk/client-s3';
 import {
   ACCESS_KEY_ID,
@@ -10,7 +11,7 @@ import {
   BUCKET_REGION,
   SECRET_ACCESS_KEY,
 } from 'consts/aws.options';
-import { randomUUID } from 'crypto'; // Import the UUID module
+import { randomUUID } from 'crypto';
 import { FileParams } from './dto/file.params';
 
 @Injectable()
@@ -34,7 +35,8 @@ export class S3Service {
       Bucket: BUCKET_NAME,
       Key: uniqueKey,
       Body: file.buffer,
-      ContentType: file.mimetype, // Corrected to use file.mimetype
+      ContentType: file.mimetype,
+      ACL: 'public-read' as ObjectCannedACL,
     };
 
     try {
